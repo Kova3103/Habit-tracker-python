@@ -1,63 +1,86 @@
 import click
-from db_manager import DBManager
-from analytics import get_all_habits, get_habits_by_periodicity, longest_streak_all, longest_streak_habit
+from tracker import HabitTracker
+from analytics import (
+    get_all_habits,
+    get_habits_by_periodicity,
+    longest_streak_all,
+    longest_streak_for_habit
+)
+
+tracker = HabitTracker()  # loads DB + predefined habits if empty
 
 @click.group()
 def cli():
-    """Habit Tracker CLI - Manage and analyze habits."""
+    """Habit Tracker CLI – Track and analyze daily/weekly habits."""
     pass
 
 @cli.command()
-@click.option('--name', prompt='Habit name')
-@click.option('--periodicity', prompt='Periodicity (daily/weekly)')
-def create(name, periodicity):
+@click.option('--name', required=True, help='Habit name')
+@click.option('--spec', required=True, help='Description')
+@click.option('--periodicity', required=True, type=click.Choice(['daily', 'weekly']))
+def create(name, spec, periodicity):
     """Create a new habit."""
-    db = DBManager()
-    habit = db.create_habit(name, periodicity)
-    click.echo(f"Created habit: {habit}")
-    db.close()
+    habit = tracker.create_habit(name, spec, periodicity)
+    click.echo(f"Created: {habit.name} (ID: {habit.id}) - {periodicity}")
 
-@cli.command()
-@click.option('--habit_id', prompt='Habit ID (from list)', type=int)
-def checkoff(habit_id):
-    """Check off a habit for the current period."""
-    db = DBManager()
-    db.add_check_off(habit_id)
-    click.echo(f"Checked off habit ID {habit_id}.")
-    db.close()
+@cli.command(name='check-off')
+@click.option('--id', required=True, type=int, help='Habit ID')
+def check_off(id):
+    """Check off a habit (mark as done today)."""
+    tracker.check_off_habit(id)
+    click.echo(f"Checked off habit ID {id}")
 
-@cli.command()
-@click.option('--habit_id', prompt='Habit ID', type=int)
-def delete(habit_id):
-    """Delete a habit."""
-    db = DBManager()
-    db.delete_habit(habit_id)
-    click.echo(f"Deleted habit ID {habit_id}.")
-    db.close()
+@cli.command(name='delete')
+@click.option('--id', required=True, type=int, help='Habit ID')
+def delete(id):
+    """Delete a habit and its history."""
+    tracker.delete_habit(id)
+    click.echo(f"Deleted habit ID {id}")
 
-@cli.command()
-def list():
-    """List all habits."""
-    db = DBManager()
-    habits = get_all_habits(db)
+@cli.command(name='list')
+def list_all():
+    """List all habits with their current longest streak."""
+    habits = get_all_habits(tracker.get_all_habits())
+    if not habits:
+        click.echo("No habits yet. Use 'create' to add one.")
+        return
+
+    click.echo("Your habits (ID | Name | Periodicity | Description | Longest Streak):")
     for h in habits:
-        click.echo(h)
-    db.close()
+        streak = longest_streak_for_habit(h)
+        click.echo(f"  {h.id:2} | {h.name:20} | {h.periodicity:8} | {h.spec:30} | {streak} periods")
 
-@cli.command()
-def analyze():
-    """Analyze habits (streaks, lists)."""
-    db = DBManager()
-    click.echo("All habits:")
-    click.echo(get_all_habits(db))
-    periodicity = click.prompt("Periodicity to filter (daily/weekly or skip)", default="")
-    if periodicity:
-        click.echo(f"{periodicity.capitalize()} habits: {get_habits_by_periodicity(db, periodicity)}")
-    click.echo(f"Longest streak across all habits: {longest_streak_all(db)}")
-    habit_name = click.prompt("Habit name for specific streak (or skip)", default="")
-    if habit_name:
-        click.echo(f"Longest streak for '{habit_name}': {longest_streak_habit(db, habit_name)}")
-    db.close()
+@cli.command(name='analyze-all')
+def analyze_all():
+    """Analyze all habits: show longest streak for each + overall max."""
+    habits = get_all_habits(tracker.get_all_habits())
+    if not habits:
+        click.echo("No habits to analyze.")
+        return
+
+    click.echo("Habit Analysis:")
+    max_streak = 0
+    max_habit = None
+    for h in habits:
+        streak = longest_streak_for_habit(h)
+        click.echo(f"  {h.name} ({h.periodicity}): {streak} periods")
+        if streak > max_streak:
+            max_streak = streak
+            max_habit = h.name
+
+    click.echo(f"\nOverall longest streak: {max_streak} periods (habit: {max_habit})")
+
+@cli.command(name='longest-for')
+@click.option('--id', required=True, type=int, help='Habit ID')
+def longest_for(id):
+    """Show longest streak for one specific habit."""
+    habits = get_all_habits(tracker.get_all_habits())
+    habit = next((h for h in habits if h.id == id), None)
+    if not habit:
+        click.echo(f"Habit ID {id} not found.")
+        return
+    streak = longest_streak_for_habit(habit)
+    click.echo(f"Longest streak for '{habit.name}' ({habit.periodicity}): {streak} periods")
 
 if __name__ == '__main__':
     cli()
