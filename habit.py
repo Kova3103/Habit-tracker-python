@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 class Habit:
     """
-    Represents a habit with periodic check-offs and streak calculation.
+    Represents a habit with periodic check-offs and streak calculations.
     """
     def __init__(self, id: int, name: str, spec: str, periodicity: str,
                  created_at: datetime, check_offs: list[datetime] = None):
@@ -22,41 +22,33 @@ class Habit:
         self.check_offs.sort()
 
     def _period_start(self, dt: datetime) -> datetime.date:
-        """Return the start of the period containing dt."""
+        """Start of the period containing dt (Monday for weekly, day for daily)."""
         if self.periodicity == 'daily':
             return dt.date()
-        # weekly: start of ISO week (Monday)
         return dt.date() - timedelta(days=dt.weekday())
 
     def longest_streak(self) -> int:
-        """Calculate the longest consecutive streak of completed periods."""
+        """Longest historical streak (all-time max)."""
         if not self.check_offs:
             return 0
 
-        # Use min/max from actual check-offs for period range (more accurate for tests)
-        oldest_ts = min(self.check_offs)
-        newest_ts = max(self.check_offs)
+        oldest = min(self.check_offs)
+        newest = max(self.check_offs)
 
         step_days = 7 if self.periodicity == 'weekly' else 1
         step = timedelta(days=step_days)
 
-        # Start from oldest period (round down)
-        start_period = self._period_start(oldest_ts)
+        start = self._period_start(oldest)
+        end = self._period_start(newest)
 
-        # End: today's period (include current day/week)
-        today_period = self._period_start(datetime.now())
-
-        # Generate ordered periods from oldest to today
         periods = []
-        current = start_period
-        while current <= today_period:
+        current = start
+        while current <= end:
             periods.append(current)
             current += step
 
-        # Completed periods (at least one check-off)
         completed = {self._period_start(ts) for ts in self.check_offs}
 
-        # Calculate max consecutive
         streak = 0
         max_streak = 0
         for p in periods:
@@ -67,3 +59,41 @@ class Habit:
                 streak = 0
 
         return max_streak
+
+    def current_streak(self) -> int:
+        """
+        Current ongoing streak up to the most recent completed period.
+        - Last check-off yesterday/last week → current = longest (chain active).
+        - Check off today → current += 1 (extends chain).
+        - Miss current period → current = 0 next period.
+        """
+        if not self.check_offs:
+            return 0
+
+        step_days = 7 if self.periodicity == 'weekly' else 1
+        step = timedelta(days=step_days)
+
+        last_ts = max(self.check_offs)
+        last_period = self._period_start(last_ts)
+        today_period = self._period_start(datetime.now())
+
+        completed = {self._period_start(ts) for ts in self.check_offs}
+
+        # If last check-off is before today → chain active up to last period
+        if last_period < today_period:
+            # Count from last_period back
+            streak = 1
+            current = last_period - step
+            while current in completed:
+                streak += 1
+                current -= step
+            return streak
+
+        # Last check-off is today → count from today back
+        streak = 0
+        current = today_period
+        while current in completed:
+            streak += 1
+            current -= step
+
+        return streak

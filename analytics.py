@@ -19,3 +19,4 @@ def longest_streak_all(habits: List[Habit]) -> int:
 def longest_streak_for_habit(habit: Habit) -> int:
     """Longest streak for a single specific habit."""
     return habit.longest_streak()
+    

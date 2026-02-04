@@ -1,11 +1,9 @@
 import sqlite3
 from datetime import datetime, timedelta
+import random
 from habit import Habit
 
 class HabitTracker:
-    """
-    Manages habits, persistence in SQLite, and predefined data.
-    """
     def __init__(self, db_path='habits.db'):
         self.conn = sqlite3.connect(db_path)
         self.cursor = self.conn.cursor()
@@ -68,24 +66,35 @@ class HabitTracker:
         self.cursor.execute('DELETE FROM habits WHERE id = ?', (habit_id,))
         self.conn.commit()
 
-    def _load_predefined(self):
-        predefined = [
-            ("Brush Teeth", "Brush twice a day", "daily"),
-            ("Exercise", "Workout 30 min", "daily"),
-            ("Read Book", "Read 20 pages", "daily"),
-            ("Clean House", "Deep clean", "weekly"),
-            ("Grocery Shopping", "Buy weekly supplies", "weekly")
-        ]
-        for name, spec, per in predefined:
-            habit = self.create_habit(name, spec, per)
-            now = datetime.now()
-            for i in range(28):
-                if i % 5 != 0:  # realistic misses
-                    dt = now - timedelta(days=i, hours=12)
-                    self.check_off_habit(habit.id, dt)
+    
 
     def close(self):
-        """Close the database connection."""
         if hasattr(self, 'conn') and self.conn:
             self.conn.close()
             self.conn = None
+    
+    def _load_predefined(self):
+        """
+        Load 5 predefined habits with 4 weeks of data.
+        Last check-off is yesterday (daily) or last week (weekly) → current streak = longest on load.
+        """
+        habits_data = [
+            ("Drink Water", "Drink 2L per day", "daily", [1,2,3,5,6,7,9,10,12,13,14,16,17,18,20,21,23,24,25,27,28]),
+            ("Read Book", "Read 20 pages", "daily", list(range(1,29))),  # perfect 28
+            ("Exercise", "60 min workout", "daily", [1,4,7,10,13,16,19,22,25,28]),
+            ("Grocery Shopping", "Buy weekly groceries", "weekly", [7,14,21,28]),  # last week
+            ("Clean House", "Deep clean", "weekly", [7,14,28])   # miss one week
+        ]
+
+        start_date = datetime.now() - timedelta(days=28)
+
+        for name, spec, periodicity, check_days in habits_data:
+            habit = self.create_habit(name, spec, periodicity)
+            for day in check_days:
+                base_ts = start_date + timedelta(days=day)
+                midday = base_ts.replace(hour=12, minute=0, second=0, microsecond=0)
+                random_offset = timedelta(seconds=random.randint(-7200, 7200))
+                ts = midday + random_offset
+                self.check_off_habit(habit.id, ts)
+
+        print("Predefined habits loaded (last check-off yesterday/last week).")
