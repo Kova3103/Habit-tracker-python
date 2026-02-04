@@ -20,7 +20,7 @@ class TestHabitTracker(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        """Clean up after all tests."""
+        """Clean up test database after all tests complete."""
         if hasattr(cls, 'tracker') and hasattr(cls.tracker, 'close'):
             cls.tracker.close()
         if os.path.exists(cls.TEST_DB):
@@ -30,44 +30,50 @@ class TestHabitTracker(unittest.TestCase):
                 print("Warning: test.db locked - manual cleanup needed")
 
     def setUp(self):
-        """Clear habits between tests."""
+        """Reset tracker state before each test."""
         for habit in self.tracker.get_all_habits():
             self.tracker.delete_habit(habit.id)
 
     def test_create_habit(self):
+        """Verify habit creation stores correct metadata."""
         habit = self.tracker.create_habit("Test Habit", "Test description", "daily")
         self.assertIsNotNone(habit)
         self.assertEqual(habit.name, "Test Habit")
 
     def test_check_off_habit(self):
+        """Verify check-off recording persists to database."""
         habit = self.tracker.create_habit("Drink Water", "Drink 2L", "daily")
         self.tracker.check_off_habit(habit.id)
         loaded = self.tracker.get_all_habits()[0]
         self.assertEqual(len(loaded.check_offs), 1)
 
     def test_longest_streak_no_breaks(self):
+        """Test longest streak calculation with consecutive completions."""
         habit = Habit(1, "Perfect", "Test", "daily", datetime.now() - timedelta(days=10))
         for i in range(7):
             habit.add_check_off(datetime.now() - timedelta(days=i))
         self.assertEqual(habit.longest_streak(), 7)
 
     def test_longest_streak_with_breaks(self):
+        """Test longest streak calculation with gaps in completions."""
         habit = Habit(1, "Breaks", "Test", "daily", datetime.now() - timedelta(days=15))
         for i in [0,1,2,3,7,8,9]:
             habit.add_check_off(datetime.now() - timedelta(days=i))
         self.assertEqual(habit.longest_streak(), 4)
 
     def test_predefined_habits_loaded(self):
+        """Verify predefined habits load with correct periodicity distribution."""
         self.tracker._load_predefined()
         habits = self.tracker.get_all_habits()
         self.assertEqual(len(habits), 5)
         self.assertEqual(len([h for h in habits if h.periodicity == "daily"]), 3)
 
     def test_analytics_functions(self):
+        """Test analytics functions with multiple habits and check-offs."""
         h1 = self.tracker.create_habit("Ex", "Run", "daily")
         h2 = self.tracker.create_habit("Read", "Pages", "daily")
 
-        # FIX: Persist check-offs via tracker (so they are saved in DB)
+        # Persist check-offs to database via tracker
         now = datetime.now()
         for i in range(5):
             self.tracker.check_off_habit(h1.id, now - timedelta(days=i))

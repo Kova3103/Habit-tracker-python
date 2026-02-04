@@ -6,6 +6,7 @@ class Habit:
     """
     def __init__(self, id: int, name: str, spec: str, periodicity: str,
                  created_at: datetime, check_offs: list[datetime] = None):
+        """Initialize a habit with metadata and check-off history."""
         self.id = id
         self.name = name
         self.spec = spec
@@ -16,19 +17,20 @@ class Habit:
         self.check_offs = sorted(check_offs or [])
 
     def add_check_off(self, timestamp: datetime = None):
+        """Record a new check-off for this habit."""
         if timestamp is None:
             timestamp = datetime.now()
         self.check_offs.append(timestamp)
         self.check_offs.sort()
 
     def _period_start(self, dt: datetime) -> datetime.date:
-        """Start of the period containing dt (Monday for weekly, day for daily)."""
+        """Get the start date of the period containing dt (Monday for weekly, day for daily)."""
         if self.periodicity == 'daily':
             return dt.date()
         return dt.date() - timedelta(days=dt.weekday())
 
     def longest_streak(self) -> int:
-        """Longest historical streak (all-time max)."""
+        """Calculate the longest streak across all historical periods."""
         if not self.check_offs:
             return 0
 
@@ -41,14 +43,17 @@ class Habit:
         start = self._period_start(oldest)
         end = self._period_start(newest)
 
+        # Generate all periods from oldest to newest check-off
         periods = []
         current = start
         while current <= end:
             periods.append(current)
             current += step
 
+        # Mark completed periods
         completed = {self._period_start(ts) for ts in self.check_offs}
 
+        # Count streaks to find the longest
         streak = 0
         max_streak = 0
         for p in periods:
@@ -62,10 +67,10 @@ class Habit:
 
     def current_streak(self) -> int:
         """
-        Current ongoing streak up to the most recent completed period.
-        - Last check-off yesterday/last week → current = longest (chain active).
-        - Check off today → current += 1 (extends chain).
-        - Miss current period → current = 0 next period.
+        Calculate the current active streak based on recent check-offs.
+        
+        If last check-off is before today: count backwards from last completed period.
+        If last check-off is today: count backwards from today.
         """
         if not self.check_offs:
             return 0
@@ -79,9 +84,8 @@ class Habit:
 
         completed = {self._period_start(ts) for ts in self.check_offs}
 
-        # If last check-off is before today → chain active up to last period
+        # If last check-off is before today, count back from last completed period
         if last_period < today_period:
-            # Count from last_period back
             streak = 1
             current = last_period - step
             while current in completed:
@@ -89,7 +93,7 @@ class Habit:
                 current -= step
             return streak
 
-        # Last check-off is today → count from today back
+        # If last check-off is today, count back from today
         streak = 0
         current = today_period
         while current in completed:
