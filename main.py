@@ -1,3 +1,4 @@
+# Provides the CLI commands for creating, checking off, deleting, listing, and analyzing habits.
 import click
 from datetime import datetime
 from tracker import HabitTracker
