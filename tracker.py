@@ -1,3 +1,4 @@
+# Manages habit creation, check-offs, and persistence using SQLite database operations.
 import sqlite3
 from datetime import datetime, timedelta
 import random
