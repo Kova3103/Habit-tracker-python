@@ -1,12 +1,5 @@
 # Habit Tracker App
 
-**Course**: Object Oriented and Functional Programming with Python (DLBDSOOFPP01)  
-**Institution**: IU International University of Applied Sciences  
-**Portfolio Assignment**: Final submission – Task 1: Create a Habit Tracking App  
-**Author**: Denis Kovačević  
-**GitHub**: [https://github.com/Kova3103/Habit-tracker-python](https://github.com/Kova3103/Habit-tracker-python)  
-**Last Updated**: February 2026
-
 ## Project Overview
 
 This is a backend habit tracking application developed in Python as the final portfolio project for the course. The app allows users to:
@@ -149,4 +142,17 @@ Daily: Last check-off = yesterday
 Weekly: Last check-off = last week
 Realistic misses to test streak resets
 Random time variation (±2 hours around midday)
+
+
+## Screenshots 
+
+Screenshot of CLI help screen:
+<img width="677" height="353" alt="image" src="https://github.com/user-attachments/assets/76c3c1cd-7bae-40d7-bcb5-64e0b0655a4c" />
+
+Screenshot of analyzing all habits:
+<img width="876" height="266" alt="image" src="https://github.com/user-attachments/assets/89009487-4634-4e21-8b50-d713429ff651" />
+
+Screenshot of running tests:
+<img width="1068" height="466" alt="image" src="https://github.com/user-attachments/assets/5442002e-f0ae-49ee-a0ec-7696c65044a1" />
+
 
