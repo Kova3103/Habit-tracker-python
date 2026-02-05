@@ -59,7 +59,7 @@ def list_all():
 
 @cli.command(name='analyze-all')
 def analyze_all():
-    """Analyze habit streaks by group (all, daily, or weekly) and display performance metrics."""
+    """Analyze habit streaks by group (all, daily, or weekly)."""
     choice = click.prompt(
         "Analyze which habits?",
         type=click.Choice(['all', 'daily', 'weekly'], case_sensitive=False),
