@@ -1,3 +1,4 @@
+# Defines the Habit class with streak calculation methods (longest and current streaks).
 from datetime import datetime, timedelta
 
 class Habit:
