@@ -28,7 +28,7 @@ The project meets all acceptance criteria from the assignment:
 
 ## Requirements
 
-- **Python**: 3.7 or later (tested on 3.10+)
+- **Python**: 3.7 or later (tested on 3.10+) https://www.python.org/downloads/
 - **Dependencies** (two external):
   - `click` (for CLI)
   - `pytest` (for unit tests)
