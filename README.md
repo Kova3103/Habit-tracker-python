@@ -147,6 +147,7 @@ Random time variation (±2 hours around midday)
 ## Screenshots 
 
 Screenshot of CLI help screen:
+
 <img width="677" height="353" alt="image" src="https://github.com/user-attachments/assets/76c3c1cd-7bae-40d7-bcb5-64e0b0655a4c" />
 
 Screenshot of analyzing all habits:
@@ -154,5 +155,11 @@ Screenshot of analyzing all habits:
 
 Screenshot of running tests:
 <img width="1068" height="466" alt="image" src="https://github.com/user-attachments/assets/5442002e-f0ae-49ee-a0ec-7696c65044a1" />
+
+Screenshot of creating and deleting a habit:
+<img width="1071" height="111" alt="image" src="https://github.com/user-attachments/assets/643c6a1b-81b8-4cf0-b268-c45066920152" />
+
+Screenshot of listing habits:
+<img width="957" height="153" alt="image" src="https://github.com/user-attachments/assets/10566da8-0518-495d-8304-95ff95c21930" />
 
 
