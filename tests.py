@@ -1,3 +1,4 @@
+# Unit test suite verifying habit creation, check-offs, streak calculations, and analytics functionality.
 import unittest
 import os
 from datetime import datetime, timedelta
