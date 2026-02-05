@@ -1,3 +1,4 @@
+# Contains pure functional programming functions for analyzing and filtering habits by periodicity and streak metrics.
 from typing import List
 from habit import Habit
 from functools import reduce
